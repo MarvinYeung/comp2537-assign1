@@ -5,9 +5,10 @@ const MongoStore = require('connect-mongo');
 const bcrypt = require('bcrypt');
 const Joi = require('joi');
 const { MongoClient } = require('mongodb');
+const axios = require('axios');
 
 const app = express();
-const port = process.env.PORT || 8000;
+const port = process.env.PORT || 3000;
 
 const client = new MongoClient(process.env.MONGODB_HOST);
 let db;
@@ -53,6 +54,17 @@ app.use(session({
         sameSite: 'strict'
     }
 }));
+
+const RENDER_URL = 'https://comp2537-assign1-4z5m.onrender.com/';
+const PING_INTERVAL = 14 * 60 * 1000;
+function keepAlive() {
+    axios.get(RENDER_URL)
+        .then(response => {
+        })
+        .catch(error => {
+        });
+}
+setInterval(keepAlive, PING_INTERVAL);
 
 app.get('/', (req, res) => {
     if (req.session.user) {

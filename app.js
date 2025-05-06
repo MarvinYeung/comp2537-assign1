@@ -23,17 +23,35 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 
+const isProduction = process.env.NODE_ENV === 'production';
+if (!process.env.NODE_SESSION_SECRET) {
+    console.error('NODE_SESSION_SECRET is not set. Using a temporary secret.');
+    process.env.NODE_SESSION_SECRET = require('crypto').randomBytes(32).toString('hex');
+}
+if (!process.env.MONGODB_SESSION_SECRET) {
+    console.error('MONGODB_SESSION_SECRET is not set. Using a temporary secret.');
+    process.env.MONGODB_SESSION_SECRET = require('crypto').randomBytes(32).toString('hex');
+}
+
 app.use(session({
     secret: process.env.NODE_SESSION_SECRET,
     store: MongoStore.create({
         client,
         dbName: process.env.MONGODB_DATABASE,
         collectionName: 'sessions',
-        ttl: 60 * 60
+        ttl: 60 * 60,
+        crypto: {
+            secret: process.env.MONGODB_SESSION_SECRET
+        }
     }),
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 60 * 60 * 1000 }
+    cookie: {
+        maxAge: 60 * 60 * 1000,
+        secure: isProduction,
+        httpOnly: true,
+        sameSite: 'strict'
+    }
 }));
 
 app.get('/', (req, res) => {
@@ -119,6 +137,7 @@ app.get('/members', (req, res) => {
 
 app.get('/logout', (req, res) => {
     req.session.destroy(() => {
+        res.clearCookie('connect.sid');
         res.redirect('/');
     });
 });

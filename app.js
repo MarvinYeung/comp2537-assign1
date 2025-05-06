@@ -7,7 +7,7 @@ const Joi = require('joi');
 const { MongoClient } = require('mongodb');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8000;
 
 const client = new MongoClient(process.env.MONGODB_HOST);
 let db;
@@ -29,16 +29,16 @@ app.use(session({
         client,
         dbName: process.env.MONGODB_DATABASE,
         collectionName: 'sessions',
-        ttl: 60 * 60 
+        ttl: 60 * 60
     }),
     resave: false,
     saveUninitialized: false,
-    cookie: { maxAge: 60 * 60 * 1000 } 
+    cookie: { maxAge: 60 * 60 * 1000 }
 }));
 
 app.get('/', (req, res) => {
     if (req.session.user) {
-        return res.redirect('/members'); 
+        return res.redirect('/members');
     }
     res.render('home', { user: null });
 });
@@ -49,9 +49,9 @@ app.get('/signup', (req, res) => {
 
 app.post('/signupSubmit', async (req, res) => {
     const schema = Joi.object({
-        name: Joi.string().max(20).required(),
+        name: Joi.string().pattern(/^[a-zA-Z0-9]+$/).max(20).required(),
         email: Joi.string().email().required(),
-        password: Joi.string().max(20).required()
+        password: Joi.string().pattern(/^[a-zA-Z0-9!@#$%^&*]+$/).max(20).required()
     });
 
     const { error } = schema.validate(req.body);
@@ -84,7 +84,7 @@ app.get('/login', (req, res) => {
 app.post('/loginSubmit', async (req, res) => {
     const schema = Joi.object({
         email: Joi.string().email().required(),
-        password: Joi.string().max(20).required()
+        password: Joi.string().pattern(/^[a-zA-Z0-9!@#$%^&*]+$/).max(20).required()
     });
 
     const { error } = schema.validate(req.body);

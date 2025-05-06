@@ -7,7 +7,7 @@ const Joi = require('joi');
 const { MongoClient } = require('mongodb');
 
 const app = express();
-const port = process.env.PORT || 8000;
+const port = process.env.PORT || 3000;
 
 const client = new MongoClient(process.env.MONGODB_HOST);
 let db;
@@ -37,7 +37,10 @@ app.use(session({
 }));
 
 app.get('/', (req, res) => {
-    res.render('home', { user: req.session.user });
+    if (req.session.user) {
+        return res.redirect('/members'); 
+    }
+    res.render('home', { user: null });
 });
 
 app.get('/signup', (req, res) => {
